@@ -39,10 +39,12 @@ class Personagem:
             return -2
         elif 8 <= valor <= 9:
             return -1
-        elif 10 <= valor <= 25:
+        elif 10 <= valor <= 11:
+            return -1
+        elif 12 <= valor <= 25:
             return (valor - 10)//2
         else:
-            return 10//2
+            return 7 + (valor - 26)//2
     def __init__(self, nome, raca, classe, atributos_base, nivel=1, ouro=0):
         """
         atributos_rolados: dict com valores rolados para cada atributo
