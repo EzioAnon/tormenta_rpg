@@ -11,6 +11,7 @@ class RPGInterface:
         self.raca_var = tk.StringVar()
         self.classe_var = tk.StringVar()
         self.raca_var.trace('w', self.atualizar_interface_raca)
+        self.classe_var.trace('w', self.atualizar_modificadores)
         
         self.atributos_vars = {}
         self.modificadores_vars = {}
@@ -186,18 +187,41 @@ class RPGInterface:
         """Atualiza os bônus fixos de raça na interface"""
         try:
             raca_nome = self.raca_var.get()
-            if not raca_nome:
-                return
-                
-            raca = Raca(raca_nome)
+            raca = Raca(raca_nome) if raca_nome else None
+           
+            classe_nome = self.classe_var.get()
+            classe = Classe(classe_nome) if classe_nome else None
             
             # Atualiza labels de bônus fixos
             for atributo in self.bonus_labels:
-                bonus = MODIFICADORES_RACA_FIXOS.get(raca, {}).get(atributo, 0)
+                bonus_raca = MODIFICADORES_RACA_FIXOS.get(raca, {}).get(atributo, 0) if raca else 0
+                bonus_classe = MODIFICADORES_CLASSE.get(classe, {}).get(atributo, 0) if classe else 0
+                
+                
+                
+                
+                bonus_total = bonus_raca + bonus_classe
+
+                display_text = ""
+                if bonus_raca != 0 or bonus_classe != 0:
+                    if bonus_raca != 0 and bonus_classe != 0:
+                      
+                      display_text = f"{bonus_raca} + {bonus_classe}"
+                    elif bonus_raca != 0:
+                      
+                      display_text = f"{bonus_raca}"
+                    else:
+                        
+                      display_text = f"{bonus_classe}"
+                    
+                else:
+                 display_text = "0"
+                    
                 self.bonus_labels[atributo].config(
-                    text=f"+{bonus}" if bonus >= 0 else f"{bonus}",
-                    foreground="green" if bonus > 0 else "red" if bonus < 0 else "black"
-                )
+                    text=display_text,
+                foreground="green" if bonus_total > 0 else "red" if bonus_total < 0 else "black"
+            )
+
             
             # Atualiza modificadores
             self.atualizar_modificadores()
@@ -205,21 +229,27 @@ class RPGInterface:
         except ValueError:
             pass
     
-    def atualizar_modificadores(self):
+    def atualizar_modificadores(self,*args):
         """Atualiza todos os modificadores na interface"""
         try:
             raca_nome = self.raca_var.get()
             raca = Raca(raca_nome) if raca_nome else None
+
+            classe_nome = self.classe_var.get()
+            classe = Classe(classe_nome) if classe_nome else None
             
             # Calcula bônus totais (fixos + escolhidos)
             bonus_total = {}
             for atributo in self.bonus_labels:
                 # Bônus fixos
-                bonus = MODIFICADORES_RACA_FIXOS.get(raca, {}).get(atributo, 0)
+                bonus = MODIFICADORES_RACA_FIXOS.get(raca, {}).get(atributo, 0) if raca else 0
                 
                 # Bônus escolhidos (para raças especiais)
                 if raca in [Raca.HUMANO, Raca.LEFOU, Raca.OSTEON, Raca.SEREIA]:
                     bonus += self.checkboxes_atributos.get(atributo, tk.IntVar(value=0)).get()
+                
+                if classe:
+                    bonus += MODIFICADORES_CLASSE.get(classe, {}).get(atributo, 0)
                 
                 bonus_total[atributo] = bonus
             

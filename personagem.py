@@ -45,11 +45,8 @@ MODIFICADORES_RACA_FIXOS = {
     Raca.TROG: {'constituicao': 4, 'forca': 2, 'inteligencia': -2}
 }
 
-MODIFICADORES_CLASSE = {
-    Classe.GUERREIRO: {'forca': 2, 'constituicao': 1},
-    Classe.MAGO: {'inteligencia': 2, 'sabedoria': 1},
-    Classe.LADINO: {'destreza': 2, 'carisma': 1},
-    Classe.CLERIGO: {'sabedoria': 2, 'carisma': 1}
+MODIFICADORES_CLASSE = {#Classe em si não aumenta atributos, mas sim algumas habilidades
+    #pode usar para PV E PM
 }
 
 class Personagem:
