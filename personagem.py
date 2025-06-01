@@ -1,10 +1,24 @@
 from enum import Enum
 
 class Raca(Enum):
-    HUMANO = "Humano"
-    ELFO = "Elfo"
+    HUMANO = "Humano"#mecanis diferentes
     ANAO = "Anão"
-    HALFLING = "Halfling"
+    DAHLLAN = "Dahllan"
+    ELFO = "Elfo"
+    GOBLIN = "Goblin"
+    LEFOU = "Lefou"#mecanis diferentes
+    MINOTAURO = "Minotauro"
+    QAREEN = "Qareen"
+    GOLEM = "Golem"
+    HYNNE = "Hynne"
+    KLIREN = "Kliren"
+    MEDUSA = "Medusa"
+    OSTEON = "Osteon"#mecanis diferentes
+    SEREIA = "Sereia/Tritão"#mecanis diferentes
+    SILFIDE = "Sílfide"
+    SURAGGEL = "Suraggel"#mecanis diferentes
+    TROG = "Trog"
+
 
 class Classe(Enum):
     GUERREIRO = "Guerreiro"
@@ -13,10 +27,30 @@ class Classe(Enum):
     CLERIGO = "Clérigo"
 
 MODIFICADORES_RACA = {
-    Raca.HUMANO: {'forca': 1, 'destreza': 1, 'constituicao': 1, 'inteligencia': 1, 'sabedoria': 1, 'carisma': 1},
-    Raca.ELFO: {'destreza': 2, 'inteligencia': 1, 'constituicao': -1},
-    Raca.ANAO: {'constituicao': 2, 'forca': 1, 'carisma': -1},
-    Raca.HALFLING: {'destreza': 2, 'carisma': 1, 'forca': -1}
+    Raca.HUMANO: {},#+2 em 3 atributos diferentes
+    Raca.ANAO: {'constituicao': 4, 'sabedoria': 2, 'destreza': -2},
+    Raca.DAHLLAN: {'sabedoria': 4,'destreza': 2, 'inteligencia': -2},
+    Raca.ELFO: {'inteligencia': 4, 'destreza':2,'constituicao': -2},
+    Raca.GOBLIN:{'destreza': 4, 'inteligencia': 2, 'carisma': -2},
+    Raca.LEFOU: {'carisma':-2},# +2 em tres atributos diferentes
+    Raca.MINOTAURO:{'forca': 4, 'constituicao': 2, 'sabedoria': -2},
+    Raca.QAREEN: {'carisma': 4, 'inteligencia': 2, 'sabedoria': -2},
+    Raca.GOLEM: {'forca': 4, 'constituicao': 2, 'carisma': -2},
+    Raca.HYNNE: {'destreza': 4, 'carisma': 2, 'forca': -2},
+    Raca.KLIREN: {'inteligencia': 4, 'carisma': 2, 'forca': -2},
+    Raca.MEDUSA: {'destreza': 4, 'carisma': 2},
+    Raca.OSTEON: {'constituicao': -2},# +2 em tres atributos, menos const.
+    Raca.SEREIA: {},# +2 em tres atributos diferentes
+    Raca.SILFIDE: {'carisma': 4, 'destreza': 2, 'forca': -4},
+    Raca.SURAGGEL: {'sabedoria': 4, 'destreza': 4, 'carisma': 2, 'inteligencia': 2},
+    Raca.TROG: {'constituicao': 4, 'forca': 2, 'inteligencia': -2}
+
+
+
+
+
+
+
 }
 
 MODIFICADORES_CLASSE = {
@@ -45,6 +79,7 @@ class Personagem:
             return (valor - 10)//2
         else:
             return 7 + (valor - 26)//2
+    
     def __init__(self, nome, raca, classe, atributos_base, nivel=1, ouro=0):
         """
         atributos_rolados: dict com valores rolados para cada atributo
