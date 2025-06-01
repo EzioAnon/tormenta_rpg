@@ -1,24 +1,24 @@
 from enum import Enum
-
+from typing import Dict, List
+#oiiii
 class Raca(Enum):
-    HUMANO = "Humano"#mecanis diferentes
+    HUMANO = "Humano"  # +2 em 3 atributos diferentes
     ANAO = "Anão"
     DAHLLAN = "Dahllan"
     ELFO = "Elfo"
     GOBLIN = "Goblin"
-    LEFOU = "Lefou"#mecanis diferentes
+    LEFOU = "Lefou"  # +2 em 3 atributos diferentes (exceto Carisma)
     MINOTAURO = "Minotauro"
     QAREEN = "Qareen"
     GOLEM = "Golem"
     HYNNE = "Hynne"
     KLIREN = "Kliren"
     MEDUSA = "Medusa"
-    OSTEON = "Osteon"#mecanis diferentes
-    SEREIA = "Sereia/Tritão"#mecanis diferentes
+    OSTEON = "Osteon"  # +2 em 3 atributos diferentes (exceto Constituição)
+    SEREIA = "Sereia/Tritão"  # +2 em 3 atributos diferentes
     SILFIDE = "Sílfide"
-    SURAGGEL = "Suraggel"#mecanis diferentes
+    SURAGGEL = "Suraggel"
     TROG = "Trog"
-
 
 class Classe(Enum):
     GUERREIRO = "Guerreiro"
@@ -26,31 +26,23 @@ class Classe(Enum):
     LADINO = "Ladino"
     CLERIGO = "Clérigo"
 
-MODIFICADORES_RACA = {
-    Raca.HUMANO: {},#+2 em 3 atributos diferentes
+# Modificadores fixos (para raças sem escolha de atributos)
+MODIFICADORES_RACA_FIXOS = {
     Raca.ANAO: {'constituicao': 4, 'sabedoria': 2, 'destreza': -2},
-    Raca.DAHLLAN: {'sabedoria': 4,'destreza': 2, 'inteligencia': -2},
-    Raca.ELFO: {'inteligencia': 4, 'destreza':2,'constituicao': -2},
-    Raca.GOBLIN:{'destreza': 4, 'inteligencia': 2, 'carisma': -2},
-    Raca.LEFOU: {'carisma':-2},# +2 em tres atributos diferentes
-    Raca.MINOTAURO:{'forca': 4, 'constituicao': 2, 'sabedoria': -2},
+    Raca.DAHLLAN: {'sabedoria': 4, 'destreza': 2, 'inteligencia': -2},
+    Raca.ELFO: {'inteligencia': 4, 'destreza': 2, 'constituicao': -2},
+    Raca.GOBLIN: {'destreza': 4, 'inteligencia': 2, 'carisma': -2},
+    Raca.LEFOU: {'carisma': -2},  # +2 em 3 atributos será adicionado depois
+    Raca.MINOTAURO: {'forca': 4, 'constituicao': 2, 'sabedoria': -2},
     Raca.QAREEN: {'carisma': 4, 'inteligencia': 2, 'sabedoria': -2},
     Raca.GOLEM: {'forca': 4, 'constituicao': 2, 'carisma': -2},
     Raca.HYNNE: {'destreza': 4, 'carisma': 2, 'forca': -2},
     Raca.KLIREN: {'inteligencia': 4, 'carisma': 2, 'forca': -2},
     Raca.MEDUSA: {'destreza': 4, 'carisma': 2},
-    Raca.OSTEON: {'constituicao': -2},# +2 em tres atributos, menos const.
-    Raca.SEREIA: {},# +2 em tres atributos diferentes
+    Raca.OSTEON: {'constituicao': -2},  # +2 em 3 atributos será adicionado depois
     Raca.SILFIDE: {'carisma': 4, 'destreza': 2, 'forca': -4},
     Raca.SURAGGEL: {'sabedoria': 4, 'destreza': 4, 'carisma': 2, 'inteligencia': 2},
     Raca.TROG: {'constituicao': 4, 'forca': 2, 'inteligencia': -2}
-
-
-
-
-
-
-
 }
 
 MODIFICADORES_CLASSE = {
@@ -64,7 +56,7 @@ class Personagem:
     @staticmethod
     def calcular_modificador(valor):
         if valor == 1:
-            return - 5
+            return -5
         elif 2 <= valor <= 3:
             return -4
         elif 4 <= valor <= 5:
@@ -74,40 +66,42 @@ class Personagem:
         elif 8 <= valor <= 9:
             return -1
         elif 10 <= valor <= 11:
-            return -1
+            return 0
         elif 12 <= valor <= 25:
-            return (valor - 10)//2
+            return (valor - 10) // 2
         else:
-            return 7 + (valor - 26)//2
+            return 7 + (valor - 26) // 2
     
-    def __init__(self, nome, raca, classe, atributos_base, nivel=1, ouro=0):
-        """
-        atributos_rolados: dict com valores rolados para cada atributo
-        Exemplo: {'forca': 15, 'destreza': 12, ...}
-        """
+    def __init__(self, nome, raca, classe, atributos_base, atributos_escolhidos=None, nivel=1, ouro=0):
         self.nome = nome
         self.raca = raca
         self.classe = classe
         self.nivel = nivel
         self.ouro = ouro
         self.atributos_base = atributos_base
+        self.atributos_escolhidos = atributos_escolhidos or {}
         self.atributos = self.calcular_atributos_finais()
         self.habilidades = []
         self.equipamentos = []
     
     def calcular_atributos_finais(self):
-        """Aplica modificadores de raça e classe aos valores base"""
         atributos_finais = self.atributos_base.copy()
-
-        for atributo, bonus in MODIFICADORES_RACA.get(self.raca, {}).items():
-            atributos_finais[atributo] += bonus
-        for atributo, bonus in MODIFICADORES_CLASSE.get(self.classe, {}).items():
+        
+        # Aplica modificadores fixos
+        for atributo, bonus in MODIFICADORES_RACA_FIXOS.get(self.raca, {}).items():
             atributos_finais[atributo] += bonus
         
+        # Aplica modificadores escolhidos para raças especiais
+        for atributo, bonus in self.atributos_escolhidos.items():
+            atributos_finais[atributo] += bonus
+        
+        # Aplica bônus de classe
+        for atributo, bonus in MODIFICADORES_CLASSE.get(self.classe, {}).items():
+            atributos_finais[atributo] += bonus
+            
         return atributos_finais
-
+    
     def get_modificador(self, atributo):
-        """Retorna o modificador para um atributo específico"""
         return self.calcular_modificador(self.atributos[atributo])
     
     def to_dict(self):
@@ -118,6 +112,7 @@ class Personagem:
             'nivel': self.nivel,
             'ouro': self.ouro,
             'atributos_base': self.atributos_base,
+            'atributos_escolhidos': self.atributos_escolhidos,
             'atributos': self.atributos,
             'habilidades': self.habilidades,
             'equipamentos': self.equipamentos
@@ -128,11 +123,12 @@ class Personagem:
         raca = Raca(data['raca'])
         classe = Classe(data['classe'])
         personagem = cls(
-            data['nome'], 
-            raca, 
+            data['nome'],
+            raca,
             classe,
             data['atributos_base'],
-            data['nivel'], 
+            data.get('atributos_escolhidos', {}),
+            data['nivel'],
             data['ouro']
         )
         personagem.habilidades = data['habilidades']
