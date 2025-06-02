@@ -21,10 +21,21 @@ class Raca(Enum):
     TROG = "Trog"
 
 class Classe(Enum):
-    GUERREIRO = "Guerreiro"
-    MAGO = "Mago"
-    LADINO = "Ladino"
+    ARCANISTA = "Arcanista"
+    BARBARO = "Bárbaro"
+    BARDO = "Bardo"
+    BUCANEIRO = "Bucaneiro"
+    CACADOR = "Caçador"
+    CAVALEIRO = "Cavaleiro"
     CLERIGO = "Clérigo"
+    DRUIDA = "Druida"
+    GUERREIRO = "Guerreiro"
+    INVENTOR = "Inventor"
+    LADINO = "Ladino"
+    LUTADOR = "Lutador"
+    NOBRE = "Nobre"
+    PALADINO = "Paladino"
+   
 
 # Modificadores fixos (para raças sem escolha de atributos)
 MODIFICADORES_RACA_FIXOS = {
@@ -46,10 +57,63 @@ MODIFICADORES_RACA_FIXOS = {
 }
 
 MODIFICADORES_CLASSE = {
+    Classe.ARCANISTA : {
+        'pv': {'base': 8,  'por_nivel': 2},
+        'pm': {'base': 0, 'por_nivel': 6} #PM BASE VARIA, FALTA ADICIONAR ESSE MECANICA
+    },
+    Classe.BARBARO : {
+        'pv': {'base': 24,  'por_nivel': 6},
+        'pm': {'base': 0, 'por_nivel': 3}
+        },
+    Classe.BARDO : {
+        'pv': {'base': 12,  'por_nivel': 3},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },
+    Classe.BUCANEIRO : {
+        'pv': {'base': 16,  'por_nivel': 4},
+        'pm': {'base': 0, 'por_nivel': 3}
+        },
+    Classe.CACADOR: {
+        'pv': {'base': 16,  'por_nivel': 4},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },
+    Classe.CAVALEIRO: {
+        'pv': {'base': 20,  'por_nivel': 5},
+        'pm': {'base': 0, 'por_nivel': 3}
+        },  
+    Classe.CLERIGO: {
+        'pv': {'base': 16,  'por_nivel': 4},
+        'pm': {'base': 0, 'por_nivel': 5}
+        },  
+    Classe.DRUIDA: {
+        'pv': {'base': 16,  'por_nivel': 4},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },         
     Classe.GUERREIRO : {
         'pv': {'base': 20,  'por_nivel': 5},
-        'pm': {'base': 5, 'por_nivel': 2}
-        },#APENAS UM MODELO PARA USAR NOS OUTRPS
+        'pm': {'base': 0, 'por_nivel': 3}
+        },
+    Classe.INVENTOR: {
+        'pv': {'base': 12,  'por_nivel': 3},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },
+    Classe.LADINO: {
+        'pv': {'base': 12,  'por_nivel': 3},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },
+    Classe.LUTADOR: {
+        'pv': {'base': 20,  'por_nivel': 5},
+        'pm': {'base': 0, 'por_nivel': 3}
+        },
+    Classe.NOBRE: {
+        'pv': {'base': 16,  'por_nivel': 4},
+        'pm': {'base': 0, 'por_nivel': 4}
+        },
+    Classe.PALADINO: {
+        'pv': {'base': 20,  'por_nivel': 5},
+        'pm': {'base': 0, 'por_nivel': 3}
+        },
+        
 }
 def calcular_tabela_xp():
     tabela = [0]
