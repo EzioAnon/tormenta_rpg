@@ -188,38 +188,16 @@ class RPGInterface:
         try:
             raca_nome = self.raca_var.get()
             raca = Raca(raca_nome) if raca_nome else None
-           
-            classe_nome = self.classe_var.get()
-            classe = Classe(classe_nome) if classe_nome else None
+        
             
             # Atualiza labels de bônus fixos
             for atributo in self.bonus_labels:
                 bonus_raca = MODIFICADORES_RACA_FIXOS.get(raca, {}).get(atributo, 0) if raca else 0
-                bonus_classe = MODIFICADORES_CLASSE.get(classe, {}).get(atributo, 0) if classe else 0
-                
-                
-                
-                
-                bonus_total = bonus_raca + bonus_classe
-
-                display_text = ""
-                if bonus_raca != 0 or bonus_classe != 0:
-                    if bonus_raca != 0 and bonus_classe != 0:
-                      
-                      display_text = f"{bonus_raca} + {bonus_classe}"
-                    elif bonus_raca != 0:
-                      
-                      display_text = f"{bonus_raca}"
-                    else:
-                        
-                      display_text = f"{bonus_classe}"
-                    
-                else:
-                 display_text = "0"
+             
                     
                 self.bonus_labels[atributo].config(
-                    text=display_text,
-                foreground="green" if bonus_total > 0 else "red" if bonus_total < 0 else "black"
+                    text=f"{bonus_raca}" if bonus_raca != 0 else "0",
+                foreground="green" if bonus_raca > 0 else "red" if bonus_raca < 0 else "black"
             )
 
             
@@ -235,8 +213,7 @@ class RPGInterface:
             raca_nome = self.raca_var.get()
             raca = Raca(raca_nome) if raca_nome else None
 
-            classe_nome = self.classe_var.get()
-            classe = Classe(classe_nome) if classe_nome else None
+            
             
             # Calcula bônus totais (fixos + escolhidos)
             bonus_total = {}
@@ -248,8 +225,7 @@ class RPGInterface:
                 if raca in [Raca.HUMANO, Raca.LEFOU, Raca.OSTEON, Raca.SEREIA]:
                     bonus += self.checkboxes_atributos.get(atributo, tk.IntVar(value=0)).get()
                 
-                if classe:
-                    bonus += MODIFICADORES_CLASSE.get(classe, {}).get(atributo, 0)
+                
                 
                 bonus_total[atributo] = bonus
             
@@ -308,7 +284,8 @@ class RPGInterface:
                 classe=classe,
                 atributos_base=atributos_base,
                 atributos_escolhidos=atributos_escolhidos,
-                ouro=ouro
+                ouro=ouro,
+                xp = 0
             )
             
             self.personagens.append(personagem)
@@ -333,6 +310,9 @@ class RPGInterface:
             f"Raça: {personagem.raca.value}\n"
             f"Classe: {personagem.classe.value}\n"
             f"Nível: {personagem.nivel}\n"
+            f"XP: {personagem.xp}/{Personagem.TABELA_XP[personagem.nivel] if personagem.nivel < len(Personagem.TABELA_XP) else 'Máximo'}\n"
+            f"PV: {personagem.pv_atual}/{personagem.pv_max}\n"
+            f"PM: {personagem.pm_atual}/{personagem.pm_max}\n"
             f"Ouro: {personagem.ouro}\n"
             f"Atributos: {personagem.atributos}\n"
             f"Habilidades: {', '.join(personagem.habilidades) or 'Nenhuma'}\n"
@@ -353,7 +333,7 @@ class RPGInterface:
     def atualizar_lista(self):
         self.lista_personagens.delete(0, tk.END)
         for p in self.personagens:
-            self.lista_personagens.insert(tk.END, f"{p.nome} - {p.raca.value} {p.classe.value} (Nível {p.nivel})")
+            self.lista_personagens.insert(tk.END, f"{p.nome} - {p.raca.value} {p.classe.value} (Nível {p.nivel}, PV: {p.pv_atual}/{p.pv_max})")
     
     def limpar_formulario(self):
         self.nome_entry.delete(0, tk.END)
