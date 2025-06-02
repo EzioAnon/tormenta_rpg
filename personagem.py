@@ -172,7 +172,7 @@ class Personagem:
             data['atributos_base'],
             data.get('atributos_escolhidos', {}),
             data['nivel'],
-            data['ouro']
+            data['ouro'],
             data.get('xp', 0)
         )
         personagem.habilidades = data['habilidades']
