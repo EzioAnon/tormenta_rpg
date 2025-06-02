@@ -51,11 +51,15 @@ MODIFICADORES_CLASSE = {
         'pm': {'base': 5, 'por_nivel': 2}
         },#APENAS UM MODELO PARA USAR NOS OUTRPS
 }
+def calcular_tabela_xp():
+    tabela = [0]
+    for nivel in range(2,21):
+        tabela.append((nivel-1)*1000 + tabela[-1])
+    return tuple(tabela)
+
 
 class Personagem:
-    TABELA_XP = [
-        
-    ]
+    TABELA_XP = calcular_tabela_xp()
     @staticmethod
     def calcular_modificador(valor):
         if valor == 1:
@@ -87,11 +91,13 @@ class Personagem:
         self.atributos = self.calcular_atributos_finais()
         self.habilidades = []
         self.equipamentos = []
-        self.pv_max = self.calcular_pv_max
-        self.pm_max = self.calcular_pm_max
+        self.pv_max = self.calcular_pv_max()
+        self.pm_max = self.calcular_pm_max()
         self.pv_atual = self.pv_max
         self.pm_atual = self.pm_max
     
+
+
     def calcular_atributos_finais(self):
         atributos_finais = self.atributos_base.copy()
         
@@ -118,23 +124,38 @@ class Personagem:
     
     def adicionar_xp(self,  quantidade):
         self.xp += quantidade
-        novo_nivel = self.calcular_nivel_por_xp()
+        self.calcular_nivel_por_xp()
+
+    
+    def verificar_subida_nivel(self, novo_nivel):
+        novo_nivel = self.calcular_nivel_atual()
 
         if novo_nivel > self.nivel:
-            self.subir_de_nivel(novo_nivel)
+            niveis_ganhos = novo_nivel - self.nivel
+            self.subir_de_nivel(niveis_ganhos)
     
-    def calcular_nivel_por_xp(self):
-        for nivel,xp_necessario in enumerate(self.TABELA_XP,start=1):
-            if self.xp< xp_necessario:
+    def calcular_nivel_atual(self):
+        for nivel, xp_necessario in enumerate(self.TABELA_XP, start=1):
+            if self.xp < xp_necessario:
                 return nivel -1
         return len(self.TABELA_XP)
     
-    def subir_de_nivel(self, novo_nivel):
-        niveis_ganhos = novo_nivel - self.nivel
-        self.nivel = novo_nivel
+    def subir_de_nivel(self, niveis_ganhos = 1):
+        nivel_anterior = self.nivel
+        self.nivel += niveis_ganhos    
+    
+        # Atualiza PV e PM máximos
+        pv_antes = self.pv_max
+        pm_antes = self.pm_max
+    
+        self.pv_max = self.calcular_pv_max()
+        self.pm_max = self.calcular_pm_max()
+    
+        # Ajusta os valores atuais proporcionalmente
+        self.pv_atual = max(1, self.pv_atual + (self.pv_max - pv_antes))
+        self.pm_atual = max(0, self.pm_atual + (self.pm_max - pm_antes))
+        
 
-        self.pv_max = self.calcular_pv_max
-        self.pm_max = self.calcular_pm_max
 
     
     def get_modificador(self, atributo):
@@ -172,7 +193,7 @@ class Personagem:
             data['atributos_base'],
             data.get('atributos_escolhidos', {}),
             data['nivel'],
-            data['ouro']
+            data['ouro'],
             data.get('xp', 0)
         )
         personagem.habilidades = data['habilidades']
