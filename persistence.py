@@ -1,6 +1,6 @@
 import json
 import os
-from personagem import Personagem
+from models.personagem import Personagem
 
 def salvar_personagens(personagens, arquivo='personagens.json'):
     with open(arquivo, 'w') as f:

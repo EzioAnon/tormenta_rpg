@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from personagem import Raca, Classe, Personagem, MODIFICADORES_RACA_FIXOS, MODIFICADORES_CLASSE
+from models.personagem import Personagem
+from data.enums import Raca, Classe
 from persistence import carregar_personagens, salvar_personagens
 class RPGInterface:
     def __init__(self, root_window, return_to_menu_callback):
