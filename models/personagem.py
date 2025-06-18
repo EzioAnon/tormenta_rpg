@@ -1,7 +1,7 @@
-from data.enums import Raca, Classe
+from data.enums import Raca,Classe
 from data.modificadores import MODIFICADORES_RACA_FIXOS, MODIFICADORES_CLASSE
 from data.tabelas import TABELA_XP
-
+from data.pericias import TODAS_PERICIAS, PERICIAS_POR_NOME
 
 
 class Personagem:
@@ -41,8 +41,130 @@ class Personagem:
         self.pm_max = self.calcular_pm_max()
         self.pv_atual = self.pv_max
         self.pm_atual = self.pm_max
+        self.pericias_treinadas = set()
+        self.pericias_extras = set()
+        self.pericias_classe = {
+            'fixas': set(),
+            'escolhidas': set(),
+            'escolhas_obrigatorias': [],
+            'quantidade_escolhas_obrigatorias': 0
+        }
+        self.bonus_int_pericias = self.calcular_bonus_int_pericias()
+        self.penalidade_armadura = False
     
+    def calcular_bonus_int_pericias(self):
+        modificador_int = self.get_modificador('inteligencia')
+        return max(0, modificador_int)
+    
+    def adicionar_pericia_treinada(self, nome_pericia):
+     """Adiciona uma perícia à lista de treinadas (unifica todas as origens)"""
+    
+     # Verifica se é uma perícia fixa ou escolhida da classe
+     if nome_pericia in self.pericias_classe.get('fixas', set()):
+        self.pericias_treinadas.add(nome_pericia)
+        return
+    
+     # 2. Verifica se é escolha da classe
+     if nome_pericia in self.pericias_classe.get('escolhidas', set()):
+         self.pericias_treinadas.add(nome_pericia)
+         return
+     
+     # Verifica se é uma perícia extra por inteligência
+     bonus = self.calcular_bonus_int_pericias()
+     if len(self.pericias_extras) >= bonus:
+        raise ValueError(f"Limite de {self.bonus_int_pericias} pericias extras") 
+     
+     self.pericias_extras.add(nome_pericia)
+     self.pericias_treinadas.add(nome_pericia)
+    
+    
+    def todas_pericias_treinadas(self):
+        """Retorna todas as perícias treinadas"""
+        fixas = self.pericias_classe.get('fixas', set())
+        escolhidas = self.pericias_classe.get('escolhidas', set())
+        extras = {p.nome if hasattr(p, 'nome') else p for p in self.pericias_extras}
+        return fixas.union(escolhidas).union(extras)
 
+    
+    def definir_pericias_iniciais(self):
+        from data.pericias import PERICIAS_POR_CLASSE
+        classe_info = PERICIAS_POR_CLASSE.get(self.classe,{})
+        self.pericias_classe = {
+            'fixas': set(classe_info.get('fixas',[])),
+            'escolhidas': classe_info.get('escolhas',[]),
+            'quantidade_escolhas': classe_info.get('quantidade_escolhas', 0),
+            'extras': set()
+
+        }
+          
+    
+    def escolher_pericias_iniciais(self, escolhas_fixas, escolhas_normais):
+        """
+        escolhas_fixas: Lista de perícias escolhidas das opções obrigatórias
+        escolhas_normais: Lista de perícias escolhidas das opções normais
+        """
+        # Valida escolhas obrigatórias
+        obrigatorias = self.pericias_classe.get('escolhas_obrigatorias', [])
+        qtd_obrigatoria = self.pericias_classe.get('quantidade_escolhas_obrigatorias', 0)
+        
+        if len(escolhas_fixas) != qtd_obrigatoria:
+            raise ValueError(f"Deve escolher {qtd_obrigatoria} perícias obrigatórias")
+            
+        for nome in escolhas_fixas:
+            if nome not in [p.nome for p in obrigatorias]:
+                raise ValueError(f"{nome} não é uma opção válida")
+            self.pericias_classe['fixas'].add(nome)
+        
+        # Valida escolhas normais
+        qtd_normal = PERICIAS_POR_NOME[self.classe]['quantidade_escolhas']
+        if len(escolhas_normais) != qtd_normal:
+            raise ValueError(f"Deve escolher {qtd_normal} perícias normais")
+            
+        for nome in escolhas_normais:
+            if nome not in [p.nome for p in PERICIAS_POR_NOME[self.classe]['escolhas']]:
+                raise ValueError(f"{nome} não é uma perícia válida para esta classe")
+            self.pericias_classe['escolhidas'].add(nome)
+   
+    def adicionar_pericia_extra(self, nome_pericia):
+        """Adiciona uma perícia extra baseada em Inteligência"""
+        if len(self.pericias_extras) >= self.bonus_int_pericias:
+            raise ValueError("Número máximo de perícias extras atingido")
+        self.pericias_extras.add(nome_pericia)
+    
+    def atualizar_pericias_inteligencia(self, novo_modificador):
+        """Atualiza quando o modificador de Int aumenta permanentemente"""
+        novo_bonus = max(0, novo_modificador)
+        diferenca = novo_bonus - self.bonus_int_pericias
+        
+        if diferenca > 0:
+            self.bonus_int_pericias = novo_bonus
+            return diferenca   
+        return 0
+    
+    def validar_pericias_obrigatorias(self):
+     """Verifica se todas as escolhas obrigatórias foram feitas"""
+     obrigatorias = self.pericias_classe.get('escolhas_obrigatorias', [])
+     qtd_obrigatoria = self.pericias_classe.get('quantidade_escolhas_obrigatorias', 0)
+    
+     # Conta quantas das obrigatórias foram selecionadas
+     selecionadas = sum(1 for p in obrigatorias if p in self.pericias_treinadas)
+     return selecionadas >= qtd_obrigatoria
+
+    def atualizar_pericias_por_inteligencia(self, novo_modificador_int):
+        """Ajusta perícias extras quando Inteligência aumenta permanentemente"""
+        bonus_atual = self.calcular_bonus_int_pericias()
+        novo_bonus = max(0, novo_modificador_int)
+    
+        if novo_bonus > bonus_atual:
+            return novo_bonus - bonus_atual  # Retorna quantas novas pode adicionar
+        return 0
+    
+    
+    def todas_pericias_treinadas(self):
+        """Retorna todas as perícias treinadas"""
+        return (self.pericias_classe['fixas'] | 
+                self.pericias_classe['escolhidas'] | 
+                self.pericias_extras)
 
     def calcular_atributos_finais(self):
         atributos_finais = self.atributos_base.copy()

@@ -35,3 +35,10 @@ class Classe(Enum):
     NOBRE = "Nobre"
     PALADINO = "Paladino"
    
+class AtributoChave(Enum):
+    FORCA = "Força"
+    DESTREZA = "Destreza"
+    CONSTITUICAO = "Constituição"
+    INTELIGENCIA = "Inteligência"
+    SABEDORIA = "Sabedoria"
+    CARISMA = "Carisma"

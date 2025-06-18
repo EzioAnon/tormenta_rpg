@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from models.personagem import Personagem
+from data.modificadores import MODIFICADORES_RACA_FIXOS, MODIFICADORES_CLASSE
 from data.enums import Raca, Classe
 from persistence import carregar_personagens, salvar_personagens
+
 class RPGInterface:
     def __init__(self, root_window, return_to_menu_callback):
         self.root = root_window
@@ -19,8 +21,11 @@ class RPGInterface:
         self.bonus_labels = {}
         self.checkboxes_atributos = {}  # Para as raças especiais
         
+        self.personagem_temporario = None
+
         self.criar_widgets()
         self.atualizar_lista()
+       
     
     def criar_widgets(self):
         # Frame principal
@@ -28,18 +33,18 @@ class RPGInterface:
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Frame de criação
-        criar_frame = ttk.LabelFrame(main_frame, text="Criar Personagem", padding=10)
-        criar_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.criar_frame = ttk.LabelFrame(main_frame, text="Criar Personagem", padding=10)
+        self.criar_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Nome
-        ttk.Label(criar_frame, text="Nome:").grid(row=0, column=0, sticky="e")
-        self.nome_entry = ttk.Entry(criar_frame)
+        ttk.Label(self.criar_frame, text="Nome:").grid(row=0, column=0, sticky="e")
+        self.nome_entry = ttk.Entry(self.criar_frame)
         self.nome_entry.grid(row=0, column=1, columnspan=3, sticky="ew")
         
         # Raça
-        ttk.Label(criar_frame, text="Raça:").grid(row=1, column=0, sticky="e")
+        ttk.Label(self.criar_frame, text="Raça:").grid(row=1, column=0, sticky="e")
         self.raca_combo = ttk.Combobox(
-            criar_frame, 
+            self.criar_frame, 
             textvariable=self.raca_var,
             values=[r.value for r in Raca], 
             state='readonly'
@@ -47,9 +52,9 @@ class RPGInterface:
         self.raca_combo.grid(row=1, column=1, columnspan=3, sticky="ew")
         
         # Classe
-        ttk.Label(criar_frame, text="Classe:").grid(row=2, column=0, sticky="e")
+        ttk.Label(self.criar_frame, text="Classe:").grid(row=2, column=0, sticky="e")
         self.classe_combo = ttk.Combobox(
-            criar_frame, 
+            self.criar_frame, 
             textvariable=self.classe_var,
             values=[c.value for c in Classe], 
             state='readonly'
@@ -57,47 +62,47 @@ class RPGInterface:
         self.classe_combo.grid(row=2, column=1, columnspan=3, sticky="ew")
         
         # Ouro
-        ttk.Label(criar_frame, text="Ouro:").grid(row=3, column=0, sticky="e")
-        self.ouro_entry = ttk.Entry(criar_frame, width=10)
+        ttk.Label(self.criar_frame, text="Ouro:").grid(row=3, column=0, sticky="e")
+        self.ouro_entry = ttk.Entry(self.criar_frame, width=10)
         self.ouro_entry.insert(0, "0")
         self.ouro_entry.grid(row=3, column=1, sticky="w")
         
         # Frame para seleção de atributos especiais
-        self.frame_atributos_especiais = ttk.LabelFrame(criar_frame, text="Escolha 3 Atributos para Bônus (+2 cada)", padding=10)
+        self.frame_atributos_especiais = ttk.LabelFrame(self.criar_frame, text="Escolha 3 Atributos para Bônus (+2 cada)", padding=10)
         self.frame_atributos_especiais.grid(row=4, column=0, columnspan=4, sticky="ew", pady=5)
         self.frame_atributos_especiais.grid_remove()  # Escondido inicialmente
         
         # Atributos
-        ttk.Label(criar_frame, text="Atributos (valores rolados):").grid(row=5, column=0, columnspan=4, pady=5)
+        ttk.Label(self.criar_frame, text="Atributos (valores rolados):").grid(row=5, column=0, columnspan=4, pady=5)
         
         atributos = ['forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'carisma']
         for i, atributo in enumerate(atributos):
             # Nome do atributo
-            ttk.Label(criar_frame, text=f"{atributo.capitalize()}:").grid(row=6+i, column=0, sticky="e")
+            ttk.Label(self.criar_frame, text=f"{atributo.capitalize()}:").grid(row=6+i, column=0, sticky="e")
             
             # Entrada do valor rolado
             self.atributos_vars[atributo] = tk.IntVar(value=10)
             ttk.Entry(
-                criar_frame, 
+                self.criar_frame, 
                 textvariable=self.atributos_vars[atributo], 
                 width=5
             ).grid(row=6+i, column=1, sticky="w")
             
             # Label para bônus fixos
-            self.bonus_labels[atributo] = ttk.Label(criar_frame, text="+0", width=5)
+            self.bonus_labels[atributo] = ttk.Label(self.criar_frame, text="+0", width=5)
             self.bonus_labels[atributo].grid(row=6+i, column=2)
             
             # Label para modificador
             self.modificadores_vars[atributo] = tk.StringVar(value="+0")
             ttk.Label(
-                criar_frame, 
+                self.criar_frame, 
                 textvariable=self.modificadores_vars[atributo],
                 width=5
             ).grid(row=6+i, column=3)
         
         # Botão criar
         ttk.Button(
-            criar_frame, 
+            self.criar_frame, 
             text="Criar Personagem", 
             command=self.criar_personagem
         ).grid(row=13, column=0, columnspan=4, pady=10)
@@ -128,7 +133,53 @@ class RPGInterface:
             text="Remover", 
             command=self.remover_personagem
         ).pack(side=tk.LEFT, padx=5)
+
+        self.btn_pericias = ttk.Button(
+        self.criar_frame,
+        text="Gerenciar Perícias",
+        command=self.abrir_gerenciador_pericias,
+        state='disabled'  # Inicialmente desativado
+        )
+        self.btn_pericias.grid(row=20, columnspan=4, pady=10)
+
+        lista_frame = ttk.LabelFrame(main_frame, text="Personagens", padding=10)
+        lista_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
     
+        # Ativar botão quando classe for selecionada
+        self.classe_var.trace_add('write', self.validar_botao_pericias)
+    
+    def validar_botao_pericias(self, *args):
+     """Ativa o botão se classe estiver selecionada"""
+     if self.classe_var.get():
+        self.btn_pericias['state'] = 'normal'
+     else:
+        self.btn_pericias['state'] = 'disabled' 
+
+    def abrir_gerenciador_pericias(self):
+     from interface.pericias_window import PericiasWindow
+    
+     # Cria personagem temporário só com os dados básicos
+     temp_personagem = Personagem(
+        nome=self.nome_entry.get(),
+        raca=Raca(self.raca_var.get()),
+        classe=Classe(self.classe_var.get()),
+        atributos_base={atributo: var.get() for atributo, var in self.atributos_vars.items()},
+        ouro=int(self.ouro_entry.get())
+        )
+    
+     PericiasWindow(
+        parent=self.root,
+        personagem=temp_personagem,
+        callback=self.salvar_personagem_completo
+        )
+  
+    def salvar_personagem_completo(self, personagem_completo):
+     """Recebe o personagem com perícias preenchidas"""
+     self.personagens.append(personagem_completo)
+     salvar_personagens(self.personagens)
+     self.atualizar_lista()
+     messagebox.showinfo("Sucesso", "Personagem criado com todas as perícias!")
+
     def atualizar_interface_raca(self, *args):
         """Atualiza a interface quando a raça é alterada"""
         try:
@@ -279,7 +330,7 @@ class RPGInterface:
                 atributos_escolhidos = {atributo: bonus for atributo, bonus in selecionados}
             
             # Cria o personagem
-            personagem = Personagem(
+            self.personagem_temporario = Personagem(
                 nome=nome,
                 raca=raca,
                 classe=classe,
@@ -289,16 +340,34 @@ class RPGInterface:
                 xp = 0
             )
             
-            self.personagens.append(personagem)
-            salvar_personagens(self.personagens)
-            self.atualizar_lista()
-            self.limpar_formulario()
+
+            self.abrir_selecao_pericias()
             
             messagebox.showinfo("Sucesso", f"Personagem {nome} criado com sucesso!")
             
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao criar personagem: {str(e)}")
     
+    def abrir_selecao_pericias(self):
+        from interface.pericias_window import PericiasClasseWindow
+        def callback_pericias():
+         try:    
+             self.personagens.append(self.personagem_temporario)
+             salvar_personagens(self.personagens)
+             self.atualizar_lista()
+             self.limpar_formulario()
+             messagebox.showinfo("Sucesso", f"Personagem {self.personagem_temporario.nome} criado com sucesso!")
+         except Exception as e:
+           messagebox.showerror("Erro", f"Falha ao salvar personagem: {str(e)}")
+           raise
+    
+        PericiasClasseWindow(
+            root_window=self.root,
+            personagem=self.personagem_temporario,
+            callback=lambda: self.callback_pericias()
+        )
+    
+
     def ver_detalhes_personagem(self):
         selecionado = self.lista_personagens.curselection()
         if not selecionado:
